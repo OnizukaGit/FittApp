@@ -5,12 +5,15 @@ from django.urls import reverse_lazy
 from Fit_website.forms import RegisterForm, AuthenticationForm
 from django.contrib.auth.views import LoginView, LogoutView
 from Fit_website.models import TimeofDay, MealTime
+from django.shortcuts import redirect
 
 
 class LoadingPage(View):
     def get(self, request):
         time_of_days = TimeofDay.objects.all()
-        meal = MealTime.objects.filter(timeofday__name="Śniadanie", user=request.user)
+        meal = None
+        if request.user.is_authenticated:
+            meal = MealTime.objects.filter(timeofday__name="Śniadanie", user=request.user)
         return render(request, 'Fit_website/index.html',
                       context={'time_of_days': time_of_days,
                                'meal': meal,
@@ -29,11 +32,16 @@ class Register(CreateView):
         self.object.save()
         return response
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('index')
+
 
 class Login(LoginView):
     template_name = 'Fit_website/login.html'
     next_page = reverse_lazy('index')
     authentication_form = AuthenticationForm
+    redirect_authenticated_user = True
 
 
 class Logout(LogoutView):
