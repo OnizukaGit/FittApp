@@ -4,11 +4,17 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from Fit_website.forms import RegisterForm, AuthenticationForm
 from django.contrib.auth.views import LoginView, LogoutView
+from Fit_website.models import TimeofDay, MealTime
 
 
 class LoadingPage(View):
     def get(self, request):
-        return render(request, 'Fit_website/index.html')
+        time_of_days = TimeofDay.objects.all()
+        meal = MealTime.objects.filter(timeofday__name="Śniadanie", user=request.user)
+        return render(request, 'Fit_website/index.html',
+                      context={'time_of_days': time_of_days,
+                               'meal': meal,
+                               })
 
 
 class Register(CreateView):
