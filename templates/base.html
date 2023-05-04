@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Base Page</title>
+</head>
+<body>
+{% if user.is_authenticated %}
+<h1>Hej {{ user }}</h1>
+    <a href="{% url 'logout' %}">Wyloguj</a>
+    {% else %}
+    <a href="{% url 'login' %}">Zaloguj się</a>
+<a href="{% url 'register' %}">Rejestracja</a>
+{% endif %}
+{% block content %}
+
+
+{% block page_content %}{% endblock %}
+
+
+{% endblock %}
+</body>
+</html>
