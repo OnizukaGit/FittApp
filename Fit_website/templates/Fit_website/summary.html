@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+
 {% block content %}
 
+    <h1>Podsumowanie</h1>
+
 <form action="" method="post">
-<h1>Rejestracja</h1>
     {% csrf_token %}
     {{ form.as_p }}
-
-    <input type="submit" value="Wyślij">
+    <input type="submit" value="Dodaj">
 </form>
 {% endblock %}

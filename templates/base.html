@@ -6,12 +6,17 @@
     <title>Base Page</title>
 </head>
 <body>
+<a href="{% url 'index' %}">Strona główna</a>
 {% if user.is_authenticated %}
 <h1>Hej {{ user }}</h1>
     <a href="{% url 'logout' %}">Wyloguj</a>
+    <a href="{% url 'add_ingredients' %}">Dodaj Składniki</a>
+    <a href="{% url 'add_meal' %}">Dodaj Posiłek</a>
+    <a href="{% url 'summary' %}">Podsumowanie</a>
     {% else %}
     <a href="{% url 'login' %}">Zaloguj się</a>
-<a href="{% url 'register' %}">Rejestracja</a>
+    <a href="{% url 'register' %}">Rejestracja</a>
+
 {% endif %}
 {% block content %}
 

@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 {% block page_content %}
     {%  if user.is_authenticated %}
-        {% for obj in meal %}
-            {{ obj.name }} {{ obj.timeofday }} {{ obj.meal }}
-        {% endfor %}
+{% for obj in meal %}
+    <br>
+    {{ obj.name }} {{ obj.timeofday }} {{ obj.meal }}
+    {% for ingredient in obj.meal.ingredients.all %}
+        {{ ingredient.name }},
+    {% endfor %}
+    <br>
+{% endfor %}
     {% endif %}
  {% endblock %}

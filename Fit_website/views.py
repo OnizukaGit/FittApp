@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views import View
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
-from Fit_website.forms import RegisterForm, AuthenticationForm
+from Fit_website.forms import RegisterForm, AuthenticationForm, IngredientsForm, MealForm, MealTimeForm
 from django.contrib.auth.views import LoginView, LogoutView
 from Fit_website.models import TimeofDay, MealTime
 from django.shortcuts import redirect
@@ -35,6 +35,8 @@ class Register(CreateView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('index')
+        else:
+            return self.get(reverse_lazy('register'))
 
 
 class Login(LoginView):
@@ -47,3 +49,43 @@ class Login(LoginView):
 class Logout(LogoutView):
     template_name = 'Fit_website/index.html'
     next_page = reverse_lazy('login')
+
+
+class AddIngredients(CreateView):
+    template_name = 'Fit_website/add_ingredients.html'
+    success_url = reverse_lazy('index')
+    form_class = IngredientsForm
+
+    def form_valid(self, form):
+        isinstance = form.save(commit=False)
+        isinstance.user = self.request.user
+        isinstance.save()
+        return super().form_valid(form)
+
+
+class AddMeal(CreateView):
+    template_name = 'Fit_website/add_meal.html'
+    success_url = reverse_lazy('index')
+    form_class = MealForm
+
+    def form_valid(self, form):
+        isinstance = form.save(commit=False)
+        isinstance.user = self.request.user
+        isinstance.save()
+        return super().form_valid(form)
+
+
+class Summary(CreateView):
+    template_name = 'Fit_website/summary.html'
+    success_url = reverse_lazy('index')
+    form_class = MealTimeForm
+
+    def form_valid(self, form):
+        isinstance = form.save(commit=False)
+        isinstance.user = self.request.user
+        isinstance.save()
+        return super().form_valid(form)
+
+
+
+
