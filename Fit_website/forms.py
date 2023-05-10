@@ -2,7 +2,9 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
-from Fit_website.models import Ingredient, MealTime, Meal
+from Fit_website.models import Ingredient, MealTime, Meal, IngredientQuantity
+from django.forms import inlineformset_factory
+
 
 User = get_user_model()
 
@@ -33,10 +35,6 @@ class RegisterForm(forms.ModelForm):
             raise forms.ValidationError("Ten email jest już w naszej bazie")
         return email
 
-    # def is_valid(self):
-    #     if self.pass1 != self.pass1:
-    #         return forms.ValidationError('Hasła róznią się od siebie')
-
 
 class IngredientsForm(forms.ModelForm):
 
@@ -53,7 +51,26 @@ class MealTimeForm(forms.ModelForm):
 
 
 class MealForm(forms.ModelForm):
-
     class Meta:
         model = Meal
-        exclude = ('user',)
+        fields = ['name', 'description']
+
+
+class IngredientForm(forms.ModelForm):
+    class Meta:
+        model = IngredientQuantity
+        fields = ['ingredient', 'quantity']
+
+
+class BaseIngredientFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        for form in self.forms:
+            ingredient = form.cleaned_data.get('ingredient')
+            quantity = form.cleaned_data.get('quantity')
+            if ingredient and quantity and quantity <= 0:
+                raise forms.ValidationError("Quantity must be greater than zero")
+
+
+IngredientFormSet = inlineformset_factory(Meal, IngredientQuantity, form=IngredientForm, extra=1, can_delete=True,
+                                          formset=BaseIngredientFormSet)

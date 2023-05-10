@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Fit_website.views import LoadingPage, Register, Login, Logout, AddIngredients, AddMeal, Summary
+from Fit_website.views import LoadingPage, Register, Login, Logout, AddIngredients, AddMeal, Summary, SearchIngredientView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,5 +27,6 @@ urlpatterns = [
     path('add-ingredients/', AddIngredients.as_view(), name='add_ingredients'),
     path('add-meal/', AddMeal.as_view(), name='add_meal'),
     path('summary/', Summary.as_view(), name='summary'),
+    path('ajax/ingredients/', SearchIngredientView.as_view(), name='ajax_ingredients'),
 
 ]

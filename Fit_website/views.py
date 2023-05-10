@@ -2,10 +2,14 @@ from django.shortcuts import render
 from django.views import View
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
-from Fit_website.forms import RegisterForm, AuthenticationForm, IngredientsForm, MealForm, MealTimeForm
+from Fit_website.forms import RegisterForm, AuthenticationForm, IngredientsForm, MealForm, MealTimeForm, IngredientFormSet
 from django.contrib.auth.views import LoginView, LogoutView
-from Fit_website.models import TimeofDay, MealTime
+from Fit_website.models import TimeofDay, MealTime, Ingredient
 from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.db import transaction
+
+
 
 
 class LoadingPage(View):
@@ -68,11 +72,37 @@ class AddMeal(CreateView):
     success_url = reverse_lazy('index')
     form_class = MealForm
 
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['ingredient_formset'] = IngredientFormSet(self.request.POST, instance=self.object)
+        else:
+            data['ingredient_formset'] = IngredientFormSet(instance=self.object)
+        return data
+
     def form_valid(self, form):
-        isinstance = form.save(commit=False)
-        isinstance.user = self.request.user
-        isinstance.save()
+        context = self.get_context_data()
+        ingredient_formset = context['ingredient_formset']
+        self.object = form.save(commit=False)
+        self.object.user = self.request.user
+        self.object.save()
+
+        with transaction.atomic():
+            ingredient_formset.instance = self.object
+            if ingredient_formset.is_valid():
+                ingredient_formset.save()
+            else:
+                return self.form_invalid(form)
+
         return super().form_valid(form)
+
+
+class SearchIngredientView(View):
+    def get(self, request):
+        query = request.GET.get('query')
+        ingredients = Ingredient.objects.filter(name__icontains=query)
+        data = [{'id': i.id, 'name': i.name} for i in ingredients]
+        return JsonResponse(data, safe=False)
 
 
 class Summary(CreateView):
