@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm
+from django.forms import formset_factory
+
 from Fit_website.models import Ingredient, MealTime, Meal, IngredientQuantity
-from django.forms import inlineformset_factory
+from django.forms.models import inlineformset_factory
 
 
 User = get_user_model()
@@ -62,15 +63,18 @@ class IngredientForm(forms.ModelForm):
         fields = ['ingredient', 'quantity']
 
 
-class BaseIngredientFormSet(forms.BaseInlineFormSet):
-    def clean(self):
-        super().clean()
-        for form in self.forms:
-            ingredient = form.cleaned_data.get('ingredient')
-            quantity = form.cleaned_data.get('quantity')
-            if ingredient and quantity and quantity <= 0:
-                raise forms.ValidationError("Quantity must be greater than zero")
+class IngredientQuantityForm(forms.ModelForm):
+    class Meta:
+        model = IngredientQuantity
+        fields = ('ingredient', 'quantity')
 
 
-IngredientFormSet = inlineformset_factory(Meal, IngredientQuantity, form=IngredientForm, extra=1, can_delete=True,
-                                          formset=BaseIngredientFormSet)
+IngredientQuantityFormSet = inlineformset_factory(Meal, IngredientQuantity, form=IngredientQuantityForm, extra=1)
+
+
+class MealIngredientForm(forms.ModelForm):
+    class Meta:
+        model = Meal
+        fields = ('name', 'description')
+
+

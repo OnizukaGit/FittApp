@@ -1,15 +1,17 @@
-from django.shortcuts import render
-from django.views import View
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
-from Fit_website.forms import RegisterForm, AuthenticationForm, IngredientsForm, MealForm, MealTimeForm, IngredientFormSet
+from Fit_website.forms import RegisterForm, IngredientsForm, MealTimeForm
 from django.contrib.auth.views import LoginView, LogoutView
-from Fit_website.models import TimeofDay, MealTime, Ingredient
-from django.shortcuts import redirect
-from django.http import JsonResponse
-from django.db import transaction
-
-
+from django.shortcuts import render, redirect
+from django.views import View
+from Fit_website.models import Meal, TimeofDay, MealTime, Ingredient, IngredientQuantity
+from .forms import MealForm, IngredientQuantityFormSet
+from rest_framework import viewsets
+from Fit_website.serializer import IngredientSerializer, MealSerializer, MealTimeSerializer,\
+    IngredientQuantitySerializer, TimeofDaySerializer
 
 
 class LoadingPage(View):
@@ -67,44 +69,6 @@ class AddIngredients(CreateView):
         return super().form_valid(form)
 
 
-class AddMeal(CreateView):
-    template_name = 'Fit_website/add_meal.html'
-    success_url = reverse_lazy('index')
-    form_class = MealForm
-
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        if self.request.POST:
-            data['ingredient_formset'] = IngredientFormSet(self.request.POST, instance=self.object)
-        else:
-            data['ingredient_formset'] = IngredientFormSet(instance=self.object)
-        return data
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        ingredient_formset = context['ingredient_formset']
-        self.object = form.save(commit=False)
-        self.object.user = self.request.user
-        self.object.save()
-
-        with transaction.atomic():
-            ingredient_formset.instance = self.object
-            if ingredient_formset.is_valid():
-                ingredient_formset.save()
-            else:
-                return self.form_invalid(form)
-
-        return super().form_valid(form)
-
-
-class SearchIngredientView(View):
-    def get(self, request):
-        query = request.GET.get('query')
-        ingredients = Ingredient.objects.filter(name__icontains=query)
-        data = [{'id': i.id, 'name': i.name} for i in ingredients]
-        return JsonResponse(data, safe=False)
-
-
 class Summary(CreateView):
     template_name = 'Fit_website/summary.html'
     success_url = reverse_lazy('index')
@@ -117,5 +81,56 @@ class Summary(CreateView):
         return super().form_valid(form)
 
 
+class AddMeal(LoginRequiredMixin, CreateView):
+    model = Meal
+    form_class = MealForm
+    template_name = 'Fit_website/add_meal.html'
+    success_url = reverse_lazy('index')
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['ingredient_formset'] = IngredientQuantityFormSet(self.request.POST)
+        else:
+            data['ingredient_formset'] = IngredientQuantityFormSet()
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        ingredient_formset = context['ingredient_formset']
+        with transaction.atomic():
+            self.object = form.save(commit=False)
+            self.object.user = self.request.user
+            self.object.save()
+            if ingredient_formset.is_valid():
+                ingredient_formset.instance = self.object
+                ingredient_formset.save()
+                print('Formset is valid')
+            else:
+                print(ingredient_formset.errors)
+        return super().form_valid(form)
 
 
+class IngredientViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+
+
+class MealViewSet(viewsets.ModelViewSet):
+    queryset = Meal.objects.all()
+    serializer_class = MealSerializer
+
+
+class MealTimeViewSet(viewsets.ModelViewSet):
+    queryset = MealTime.objects.all()
+    serializer_class = MealTimeSerializer
+
+
+class IngredientQuantityViewSet(viewsets.ModelViewSet):
+    queryset = IngredientQuantity.objects.all()
+    serializer_class = IngredientQuantitySerializer
+
+
+class TimeofDayViewSet(viewsets.ModelViewSet):
+    queryset = TimeofDay.objects.all()
+    serializer_class = TimeofDaySerializer

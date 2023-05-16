@@ -15,8 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from Fit_website.views import LoadingPage, Register, Login, Logout, AddIngredients, AddMeal, Summary, SearchIngredientView
+from django.urls import path, include
+from Fit_website.views import LoadingPage, Register, Login, Logout, AddIngredients, Summary, AddMeal
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,5 @@ urlpatterns = [
     path('add-ingredients/', AddIngredients.as_view(), name='add_ingredients'),
     path('add-meal/', AddMeal.as_view(), name='add_meal'),
     path('summary/', Summary.as_view(), name='summary'),
-    path('ajax/ingredients/', SearchIngredientView.as_view(), name='ajax_ingredients'),
-
+    path('', include('Fit_website.urls')),
 ]

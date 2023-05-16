@@ -2,74 +2,56 @@
 
 {% block content %}
   <h1>Dodaj posiłek</h1>
-  <form method="post">
+<form method="post">
+
     {% csrf_token %}
-    {{ form.as_p }}
+    <div id="ingredient-form-list">
+    <div class="ingredient-form">{{ form.as_p }}</div>
+        <button type="button" class="add-ingredient" id="add-ingredient">Dodaj składnik</button>
+        <button type="button" class="delete-ingredient" id="delete-ingredient">Usuń składnik</button>
 
-    {{ ingredient_formset.management_form }}
-    <table id="ingredient-formset">
-      <tbody>
-        {% for form in ingredient_formset %}
-          <tr>
-            <td>{{ form.ingredient }}</td>
-            <td>{{ form.quantity }}</td>
-          </tr>
+            {% for form in ingredient_formset %}
+
+                <div class="hidden" id="empty-form">{{ form.as_p }}</div>
+
+            {% endfor %}
+
+        </div>
+{% if ingredient_formset.errors %}
+    <div class="alert alert-danger">
+        {% for error in ingredient_formset.errors %}
+            {{ error }}
         {% endfor %}
-      </tbody>
-    </table>
-    <button type="button" id="add-ingredient">Add Ingredient</button><input type="hidden" name="{{ ingredient_formset.management_form.prefix }}-TOTAL_FORMS" id="{{ ingredient_formset.management_form.prefix }}-TOTAL_FORMS" value="{{ ingredient_formset.total_form_count }}">
-<input type="hidden" name="{{ ingredient_formset.management_form.prefix }}-TOTAL_FORMS" id="{{ ingredient_formset.management_form.prefix }}-TOTAL_FORMS" value="{{ ingredient_formset.total_form_count }}">
+    </div>
+{% endif %}
+    <br>
+  <button type="submit">Zapisz posiłek</button>
+</form>
 
-    <input type="submit" value="Save">
-  </form>
-
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-var ingredientFormset = document.getElementById('ingredient-formset');
-var addIngredientButton = document.getElementById('add-ingredient');
-var ingredientIndex = {{ ingredient_formset.total_form_count }};
-var extraCount = 0;
-
-addIngredientButton.addEventListener('click', function() {
-    var newIngredientRow = document.createElement('tr');
-    var ingredientNameCell = document.createElement('td');
-    var ingredientNameSelect = document.createElement('select');
-    ingredientNameSelect.name = 'ingredient-' + ingredientIndex + '-ingredient';
-    ingredientNameSelect.id = 'id_ingredient-' + ingredientIndex + '-ingredient';
-    ingredientNameCell.appendChild(ingredientNameSelect);
-    newIngredientRow.appendChild(ingredientNameCell);
-
-    // Pobierz składniki z bazy danych
-    $.get('{% url "ajax_ingredients" %}', { query: '' }, function(data) {
-        // Wstaw składniki do listy wyboru
-        $.each(data, function(index, ingredient) {
-            var option = new Option(ingredient.name, ingredient.id);
-            ingredientNameSelect.add(option);
-        });
-    });
-
-    var quantityCell = document.createElement('td');
-    var quantityInput = document.createElement('input');
-    quantityInput.type = 'number';
-    quantityInput.name = 'ingredient-' + ingredientIndex + '-quantity';
-    quantityInput.id = 'id_ingredient-' + ingredientIndex + '-quantity';
-    quantityCell.appendChild(quantityInput);
-    newIngredientRow.appendChild(quantityCell);
-
-    ingredientFormset.querySelector('tbody').appendChild(newIngredientRow);
-
-    ingredientIndex++;
-
-    // Zwiększ wartość extra o 1, jeśli użytkownik chce dodać więcej niż jeden składnik
-    if (ingredientIndex > 1 && extraCount == 0) {
-        extraCount++;
-        ingredientFormset.setAttribute('data-formset-0-extra', '1');
-
-        var totalForms = parseInt(document.getElementById('id_' + formsetPrefix + '-TOTAL_FORMS').value);
-document.getElementById('id_' + formsetPrefix + '-TOTAL_FORMS').value = totalForms + 1;
-
+    <style>
+    .ingredient-form{
+        border-bottom: 1px solid black;
     }
-});
+    .hidden{
+        display: none;
+    }
+    </style>
+<script>
+    const addMoreBtn = document.getElementById('add-ingredient')
+    const totanNewForms = document.getElementById('id_ingredientquantity_set-0-ingredient')
+    const currentIngredientForms = document.getElementsByClassName('ingredient-form')
+    addMoreBtn.addEventListener('click', add_new_form)
+
+    function add_new_form(event){
+        if (event){
+            event.preventDefault()
+        }
+        let cuttentFormCount = currentIngredientForms.length
+        const formCopyTarget = document.getElementById('ingredient-form-list')
+        const emptyFormEl = document.getElementById('empty-form').cloneNode(true)
+        emptyFormEl.setAttribute('class', 'ingredient-form')
+        formCopyTarget.append(emptyFormEl)
+    }
+
 </script>
 {% endblock %}
